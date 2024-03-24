@@ -1,26 +1,29 @@
 package com.appsdeveloperblog.ws.products.service;
 
 import com.appsdeveloperblog.ws.products.rest.CreateProductRestModel;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+
 @Service
 public class ProductServiceImpl implements ProductService {
 
+    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
     private final KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 
     @Override
-    public String createProduct(CreateProductRestModel productRestModel) {
+    public String createProduct(CreateProductRestModel productRestModel)
+            throws ExecutionException, InterruptedException {
 
         String productId = UUID.randomUUID().toString();
 
@@ -33,19 +36,16 @@ public class ProductServiceImpl implements ProductService {
                         productRestModel.getPrice(),
                         productRestModel.getQuantity());
 
-        CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
-                kafkaTemplate.send("product-created-events-topic", productId, productCreatedEvent);
+        logger.info("Before publishing a ProductCreatedEvent");
 
-        future.whenComplete(
-                (result, exception) -> {
-                    if (exception != null) {
-                        logger.error("Failed to send message:" + exception.getMessage());
-                    } else {
-                        logger.info("Message send successfully: " + result.getRecordMetadata());
-                    }
-                });
+        SendResult<String, ProductCreatedEvent> result =
+                kafkaTemplate
+                        .send("product-created-events-topic", productId, productCreatedEvent)
+                        .get();
 
-//        future.join();
+        logger.info("Partition: " + result.getRecordMetadata().partition());
+        logger.info("Topic: " + result.getRecordMetadata().topic());
+        logger.info("Offset: " + result.getRecordMetadata().offset());
 
         return productId;
     }
