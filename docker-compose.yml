@@ -1,0 +1,7 @@
+version: "3.8"
+
+services:
+  kafka-1:
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092"
