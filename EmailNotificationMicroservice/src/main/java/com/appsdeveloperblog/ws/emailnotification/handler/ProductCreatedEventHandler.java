@@ -1,5 +1,6 @@
 package com.appsdeveloperblog.ws.emailnotification.handler;
 
+import com.appsdeveloperblog.ws.ProductCreatedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaHandler;
