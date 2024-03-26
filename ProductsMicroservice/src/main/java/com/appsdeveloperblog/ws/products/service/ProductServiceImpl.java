@@ -41,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
 
         SendResult<String, ProductCreatedEvent> result =
                 kafkaTemplate
-                        .send("test-topic2", productId, productCreatedEvent)
+                        .send("product-created-events-topic", productId, productCreatedEvent)
                         .get();
 
         logger.info("Partition: " + result.getRecordMetadata().partition());
